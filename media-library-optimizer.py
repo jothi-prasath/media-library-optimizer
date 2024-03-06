@@ -41,7 +41,7 @@ def remove_orphaned_files(library_path):
   else:
     print("😎 no orphaned files 😎")
 
-def rename_folders(directory):
+def rename_folders(directory, skip_prompt):
   # Regex to match a website url 
   regex_pattern = r'www\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\s*-*\s'
   folders = get_folders(directory)
@@ -53,12 +53,15 @@ def rename_folders(directory):
           print(f'Skipped: {folder}')
         else:
           # Prompt user for confirmation
-          user_input = input(f'Rename "{folder}" --> "{new_folder}"? (y/N): ').lower()
-          if user_input == 'y':
+          user_input=True
+          if not skip_prompt:
+            user_input = 'n'
+            user_input = input(f'Rename "{folder}" --> "{new_folder}"? (y/N): ').lower()
+          if not user_input:
+              print(f'Skipped: {folder}')
+          else:
               os.rename(old_path, new_path)
               print(f'{folder} --> {new_folder}')
-          else:
-              print(f'Skipped: {folder}')
 
 def main():
   parser = argparse.ArgumentParser(description="Media Library Optimizer")
@@ -66,10 +69,12 @@ def main():
   parser.add_argument("-a", "--analyze", action="store_true", help="Perform library analysis")
   parser.add_argument("-r", "--remove-orphaned", action="store_true", help="Remove orphaned files")
   parser.add_argument("-re", "--rename-folders", action="store_true", help="Remove URL prefix folders")
+  parser.add_argument("-y", "--yes", action="store_true", help="Automatic yes to prompts")
 
   args = parser.parse_args()
   if os.path.isdir(args.location):
     library_path = args.location
+    skip_prompt = args.yes
   else:
      print("⚠️ Library path not exist ⚠️")
      exit(1)
@@ -81,7 +86,7 @@ def main():
       remove_orphaned_files(library_path)
 
   if args.rename_folders:
-      rename_folders(library_path)
+      rename_folders(library_path, skip_prompt)
 
 if __name__ == "__main__":
     main()
